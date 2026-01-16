@@ -1,0 +1,22 @@
+# build artifacts
+/target/
+**/target/
+**/build/
+
+# wrangler
+**/.wrangler/
+**/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# environment
+.env
+.dev.vars

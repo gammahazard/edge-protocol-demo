@@ -1,0 +1,231 @@
+//! ==============================================================================
+//! lib.rs - capability-based security demo cloudflare worker
+//! ==============================================================================
+//!
+//! purpose:
+//!     demonstrates what cloudflare workers CAN and CANNOT do.
+//!     shows the same capability-based security model as wasi, but in the
+//!     cloudflare context where fetch/kv are allowed but filesystem is blocked.
+//!
+//! relationships:
+//!     - uses: shared (CapabilityTest, CapabilityResult, CapabilityType)
+//!     - called by: dashboard (capability explorer tab)
+//!     - deployed to: cloudflare workers
+//!
+//! cloudflare context:
+//!     workers run in v8 isolates with no access to:
+//!     - filesystem (no fs module)
+//!     - raw sockets (only fetch api)
+//!     - subprocess/exec
+//!     - node.js apis (unless explicitly polyfilled)
+//!
+//!     this mirrors wasi's capability model where the host decides
+//!     what the sandboxed code can access - not the code itself.
+//!
+//! api:
+//!     GET /api/capability?test=fetch
+//!     response: { "capability": "Fetch", "allowed": true, "message": "..." }
+//!
+//!     GET /api/capability?test=filesystem
+//!     response: { "capability": "Filesystem", "allowed": false, "message": "..." }
+//!
+//! security parallel:
+//!     cloudflare workers : fetch/kv = your wasi host : gpio-provider
+//!     both are capabilities granted by the runtime, not inherent to the code.
+//!
+//! ==============================================================================
+
+use shared::{CapabilityType, CapabilityResult};
+use worker::*;
+
+// ==============================================================================
+// worker entry point
+// ==============================================================================
+
+#[event(fetch)]
+async fn fetch(req: Request, env: Env, ctx: Context) -> Result<Response> {
+    let router = Router::new();
+    
+    router
+        .get_async("/api/capability", |req, ctx| handle_capability(req, ctx))
+        .get("/api/capabilities", handle_list_capabilities)
+        .get("/health", |_, _| Response::ok("ok"))
+        .options("/api/capability", handle_cors)
+        .run(req, env)
+        .await
+}
+
+// ==============================================================================
+// request handlers
+// ==============================================================================
+
+/// handle capability test request
+async fn handle_capability(req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    // parse query parameter
+    let url = req.url()?;
+    let test = url.query_pairs()
+        .find(|(k, _)| k == "test")
+        .map(|(_, v)| v.to_string())
+        .unwrap_or_default();
+    
+    // map to capability type
+    let capability = match test.as_str() {
+        "fetch" => CapabilityType::Fetch,
+        "kv" | "kv_storage" => CapabilityType::KvStorage,
+        "filesystem" | "fs" => CapabilityType::Filesystem,
+        "sockets" | "raw_sockets" => CapabilityType::RawSockets,
+        "subprocess" | "exec" => CapabilityType::Subprocess,
+        _ => return Response::error("unknown capability. use: fetch, kv, filesystem, sockets, subprocess", 400),
+    };
+    
+    // test the capability
+    let result = test_capability(capability, &ctx).await;
+    
+    // return json response
+    let json = serde_json::to_string(&result).unwrap();
+    let mut headers = Headers::new();
+    headers.set("Content-Type", "application/json")?;
+    headers.set("Access-Control-Allow-Origin", "*")?;
+    
+    Ok(Response::ok(json)?.with_headers(headers))
+}
+
+/// list all capabilities and their status
+fn handle_list_capabilities(_req: Request, _ctx: RouteContext<()>) -> Result<Response> {
+    let capabilities = vec![
+        ("fetch", true, "HTTP requests via fetch() API"),
+        ("kv_storage", true, "Workers KV key-value storage"),
+        ("filesystem", false, "No filesystem access in Workers"),
+        ("raw_sockets", false, "No raw socket access - only fetch()"),
+        ("subprocess", false, "No subprocess/exec - no shell access"),
+    ];
+    
+    let json = serde_json::to_string(&capabilities).unwrap();
+    let mut headers = Headers::new();
+    headers.set("Content-Type", "application/json")?;
+    headers.set("Access-Control-Allow-Origin", "*")?;
+    
+    Ok(Response::ok(json)?.with_headers(headers))
+}
+
+/// handle cors preflight
+fn handle_cors(_req: Request, _ctx: RouteContext<()>) -> Result<Response> {
+    let mut headers = Headers::new();
+    headers.set("Access-Control-Allow-Origin", "*")?;
+    headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
+    headers.set("Access-Control-Allow-Headers", "Content-Type")?;
+    
+    Ok(Response::empty()?.with_headers(headers))
+}
+
+// ==============================================================================
+// capability testing
+// ==============================================================================
+
+/// test a specific capability and return the result
+async fn test_capability(capability: CapabilityType, _ctx: &RouteContext<()>) -> CapabilityResult {
+    match capability {
+        CapabilityType::Fetch => test_fetch().await,
+        CapabilityType::KvStorage => test_kv().await,
+        CapabilityType::Filesystem => test_filesystem(),
+        CapabilityType::RawSockets => test_raw_sockets(),
+        CapabilityType::Subprocess => test_subprocess(),
+    }
+}
+
+/// test fetch capability - ALLOWED
+async fn test_fetch() -> CapabilityResult {
+    // workers CAN make fetch requests
+    match Fetch::Url("https://example.com".parse().unwrap())
+        .send()
+        .await
+    {
+        Ok(resp) => CapabilityResult {
+            capability: CapabilityType::Fetch,
+            allowed: true,
+            message: format!("fetch() succeeded - status {}", resp.status_code()),
+        },
+        Err(e) => CapabilityResult {
+            capability: CapabilityType::Fetch,
+            allowed: true, // capability exists, just failed
+            message: format!("fetch() available but request failed: {}", e),
+        },
+    }
+}
+
+/// test kv storage capability - ALLOWED (if configured)
+async fn test_kv() -> CapabilityResult {
+    // workers CAN use KV if bound in wrangler.toml
+    // for demo, we just report it's available as a capability
+    CapabilityResult {
+        capability: CapabilityType::KvStorage,
+        allowed: true,
+        message: "Workers KV is available when bound in wrangler.toml".to_string(),
+    }
+}
+
+/// test filesystem capability - BLOCKED
+fn test_filesystem() -> CapabilityResult {
+    // workers CANNOT access filesystem
+    // there is no fs module, no File api, no path operations
+    CapabilityResult {
+        capability: CapabilityType::Filesystem,
+        allowed: false,
+        message: "BLOCKED: Workers have no filesystem access. No fs module, no File API. \
+                  This is equivalent to WASI not granting wasi:filesystem capability.".to_string(),
+    }
+}
+
+/// test raw sockets capability - BLOCKED
+fn test_raw_sockets() -> CapabilityResult {
+    // workers CANNOT open raw sockets
+    // only fetch() for http/https, connect() for limited tcp
+    CapabilityResult {
+        capability: CapabilityType::RawSockets,
+        allowed: false,
+        message: "BLOCKED: Workers cannot open raw sockets. Only fetch() for HTTP \
+                  and connect() for limited TCP (WebSocket upgrades). \
+                  This is equivalent to WASI not granting wasi:sockets capability.".to_string(),
+    }
+}
+
+/// test subprocess capability - BLOCKED
+fn test_subprocess() -> CapabilityResult {
+    // workers CANNOT spawn subprocesses
+    // no child_process, no exec, no shell
+    CapabilityResult {
+        capability: CapabilityType::Subprocess,
+        allowed: false,
+        message: "BLOCKED: Workers cannot spawn subprocesses. No exec(), no shell access. \
+                  Code runs in pure V8 isolate. This is the same isolation as WASM sandbox.".to_string(),
+    }
+}
+
+// ==============================================================================
+// tests
+// ==============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_filesystem_blocked() {
+        let result = test_filesystem();
+        assert!(!result.allowed);
+        assert!(result.message.contains("BLOCKED"));
+    }
+
+    #[test]
+    fn test_subprocess_blocked() {
+        let result = test_subprocess();
+        assert!(!result.allowed);
+    }
+
+    #[test]
+    fn test_kv_allowed() {
+        // kv is allowed as a capability
+        let result = futures::executor::block_on(test_kv());
+        assert!(result.allowed);
+    }
+}

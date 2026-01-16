@@ -1,0 +1,17 @@
+[package]
+name = "capability-demo"
+version.workspace = true
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+shared = { path = "../../shared" }
+worker = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[profile.release]
+opt-level = "s"
+lto = true
