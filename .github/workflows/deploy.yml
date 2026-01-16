@@ -1,0 +1,89 @@
+# ==============================================================================
+# deploy.yml - GitHub Actions workflow for Cloudflare Workers deployment
+# ==============================================================================
+#
+# purpose:
+#     automatically build and deploy rust wasm workers to cloudflare edge
+#     on every push to main branch. preview deploys on develop branch.
+#
+# relationships:
+#     - deploys: workers/protocol-parser, workers/telemetry-voter, workers/capability-demo
+#     - triggered by: push to main or develop branches
+#     - requires: CLOUDFLARE_API_TOKEN secret in GitHub repo settings
+#
+# ==============================================================================
+
+name: Deploy Workers
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Workers to Cloudflare
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Install worker-build
+        run: cargo install worker-build
+
+      # Deploy protocol-parser worker
+      - name: Deploy protocol-parser
+        working-directory: workers/protocol-parser
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            wrangler deploy
+          else
+            wrangler deploy --env preview
+          fi
+
+      # Deploy telemetry-voter worker
+      - name: Deploy telemetry-voter
+        working-directory: workers/telemetry-voter
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            wrangler deploy
+          else
+            wrangler deploy --env preview
+          fi
+
+      # Deploy capability-demo worker
+      - name: Deploy capability-demo
+        working-directory: workers/capability-demo
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            wrangler deploy
+          else
+            wrangler deploy --env preview
+          fi
