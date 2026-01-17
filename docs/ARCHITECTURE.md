@@ -97,6 +97,8 @@ edge-protocol-demo/
 | `develop` | develop.edge-protocol-demo.pages.dev | *-preview.workers.dev |
 | `main` | edge-protocol-demo.pages.dev | *.workers.dev |
 
+> **Dashboard Build Note:** The dashboard is built locally with `trunk build --release` and the `dashboard/dist/` folder is committed to Git. Cloudflare Pages serves these pre-built files directly (no build step configured). After making changes to `dashboard/src/**`, you must rebuild and commit the dist folder for changes to deploy.
+
 ## Tech Stack
 
 | Layer | Technology |
