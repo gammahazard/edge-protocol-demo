@@ -25,7 +25,7 @@ A full-featured URL shortener using **Workers KV** for persistent storage at the
 - **Click tracking** with automatic counter increment
 - **Statistics endpoint** for analytics
 - **301 redirects** handled at edge (<50ms globally)
-- **Rate limited**  20 creates/min per IP to prevent abuse
+- **Rate limited** — 10 creates/10min per IP to prevent abuse
 
 **Why it matters:** KV is the backbone of many Cloudflare applications. This demonstrates the read-heavy, eventually-consistent patterns that scale to millions of requests.
 
@@ -60,7 +60,7 @@ Demonstrates **what Workers can and cannot do** — the same capability-based se
 **Features:**
 - Test each capability interactively via the dashboard
 - See real error messages when blocked capabilities are attempted
-- **Rate limited** — 30 tests/min per IP
+- **Rate limited** — 10 tests/5min per IP
 
 **Why it matters:** This is the same security model as WASI — code only gets capabilities the runtime explicitly grants. Demonstrates understanding of sandboxed execution.
 

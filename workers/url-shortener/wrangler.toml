@@ -7,8 +7,8 @@ command = "cargo install -q worker-build && worker-build --release"
 
 [vars]
 ENVIRONMENT = "production"
-RATE_LIMIT = "20"
-RATE_WINDOW_SECONDS = "60"
+RATE_LIMIT = "10"
+RATE_WINDOW_SECONDS = "600"
 
 # kv namespace for storing url mappings
 # created with: wrangler kv namespace create "URLS"
@@ -26,8 +26,8 @@ name = "url-shortener-preview"
 
 [env.preview.vars]
 ENVIRONMENT = "preview"
-RATE_LIMIT = "20"
-RATE_WINDOW_SECONDS = "60"
+RATE_LIMIT = "10"
+RATE_WINDOW_SECONDS = "600"
 
 [[env.preview.kv_namespaces]]
 binding = "URLS"
