@@ -37,6 +37,17 @@
 
 use shared::{CapabilityType, CapabilityResult};
 use worker::*;
+use serde::{Deserialize, Serialize};
+
+// ==============================================================================
+// types
+// ==============================================================================
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RateInfo {
+    count: u32,
+    window_start: u64,
+}
 
 // ==============================================================================
 // worker entry point
@@ -61,6 +72,26 @@ async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
 /// handle capability test request
 async fn handle_capability(req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    // check rate limit first
+    let limit: u32 = ctx.env.var("RATE_LIMIT")
+        .map(|v| v.to_string().parse().unwrap_or(30))
+        .unwrap_or(30);
+    let window_seconds: u64 = ctx.env.var("RATE_WINDOW_SECONDS")
+        .map(|v| v.to_string().parse().unwrap_or(60))
+        .unwrap_or(60);
+    
+    let client_id = get_client_id(&req);
+    let (allowed, _) = check_rate_limit(&ctx, &client_id, limit, window_seconds).await?;
+    
+    if !allowed {
+        let headers = Headers::new();
+        headers.set("Content-Type", "application/json")?;
+        headers.set("Access-Control-Allow-Origin", "*")?;
+        let mut resp = Response::ok("{\"error\": \"rate limit exceeded - try again later\"}")?;
+        resp = resp.with_status(429);
+        return Ok(resp.with_headers(headers));
+    }
+    
     // parse query parameter
     let url = req.url()?;
     let test = url.query_pairs()
@@ -199,6 +230,70 @@ fn test_subprocess() -> CapabilityResult {
         message: "BLOCKED: Workers cannot spawn subprocesses. No exec(), no shell access. \
                   Code runs in pure V8 isolate. This is the same isolation as WASM sandbox.".to_string(),
     }
+}
+
+// ==============================================================================
+// rate limiting
+// ==============================================================================
+
+/// check if request is allowed and update counter
+async fn check_rate_limit(
+    ctx: &RouteContext<()>,
+    client_id: &str,
+    limit: u32,
+    window_seconds: u64,
+) -> Result<(bool, RateInfo)> {
+    let kv = ctx.env.kv("RATES")?;
+    let now = js_sys::Date::now() as u64 / 1000;
+    
+    // prefix with worker name to avoid collisions
+    let key = format!("capability-demo:{}", client_id);
+    
+    // get current rate info
+    let mut rate_info = match kv.get(&key).text().await? {
+        Some(json) => {
+            let info: RateInfo = serde_json::from_str(&json).unwrap_or(RateInfo {
+                count: 0,
+                window_start: now,
+            });
+            // check if window has expired
+            if now - info.window_start >= window_seconds {
+                RateInfo { count: 0, window_start: now }
+            } else {
+                info
+            }
+        }
+        None => RateInfo { count: 0, window_start: now },
+    };
+    
+    // check if over limit
+    if rate_info.count >= limit {
+        return Ok((false, rate_info));
+    }
+    
+    // increment counter
+    rate_info.count += 1;
+    
+    // store updated info with ttl
+    let json = serde_json::to_string(&rate_info).unwrap();
+    kv.put(&key, json)?
+        .expiration_ttl(window_seconds)
+        .execute()
+        .await?;
+    
+    Ok((true, rate_info))
+}
+
+/// get client identifier from ip address
+fn get_client_id(req: &Request) -> String {
+    let headers = req.headers();
+    
+    // use cf-connecting-ip (cloudflare provides this)
+    if let Ok(Some(ip)) = headers.get("CF-Connecting-IP") {
+        return format!("ip:{}", ip);
+    }
+    
+    "unknown".to_string()
 }
 
 // ==============================================================================
