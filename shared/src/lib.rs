@@ -1,5 +1,5 @@
 //! ==============================================================================
-//! lib.rs - shared types for edge protocol demo
+//! lib.rs - shared types for edge cloudflare workers demo
 //! ==============================================================================
 //!
 //! purpose:
@@ -7,100 +7,84 @@
 //!     having a shared crate ensures type consistency and reduces duplication.
 //!
 //! relationships:
-//!     - used by: workers/protocol-parser (ModbusFrame)
-//!     - used by: workers/telemetry-voter (TelemetryPacket, VoteResult)
-//!     - used by: workers/capability-demo (CapabilityTest)
-//!     - used by: dashboard (all types for API responses)
+//!     - used by: workers/url-shortener (ShortenRequest, ShortenResponse)
+//!     - used by: workers/rate-limiter (RateLimitConfig)
+//!     - used by: workers/capability-demo (CapabilityTest, CapabilityResult)
 //!
 //! design rationale:
-//!     instead of defining types in each worker, we share them here.
-//!     this mirrors industrial patterns where protocol definitions are
-//!     centralized and versioned independently of application logic.
+//!     centralized types make api changes easier to manage across workers.
+//!     for a portfolio project, this demonstrates understanding of rust
+//!     workspace patterns and code organization.
 //!
 //! ==============================================================================
 
 use serde::{Deserialize, Serialize};
 
 // ==============================================================================
-// modbus protocol types
+// url shortener types
 // ==============================================================================
 
-/// parsed modbus rtu frame
-/// 
-/// modbus rtu format:
-/// [device_id: 1 byte][function_code: 1 byte][data: n bytes][crc: 2 bytes]
+/// request to shorten a url
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModbusFrame {
-    /// device address (1-247)
-    pub device_id: u8,
-    /// function code (1=read coils, 3=read holding registers, etc.)
-    pub function_code: u8,
-    /// payload data (varies by function)
-    pub data: Vec<u8>,
-    /// whether crc validation passed
-    pub crc_valid: bool,
+pub struct ShortenRequest {
+    pub url: String,
 }
 
-/// modbus function codes we support
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
-pub enum ModbusFunction {
-    ReadCoils = 0x01,
-    ReadDiscreteInputs = 0x02,
-    ReadHoldingRegisters = 0x03,
-    ReadInputRegisters = 0x04,
-    WriteSingleCoil = 0x05,
-    WriteSingleRegister = 0x06,
-    WriteMultipleCoils = 0x0F,
-    WriteMultipleRegisters = 0x10,
-}
-
-// ==============================================================================
-// telemetry and voting types
-// ==============================================================================
-
-/// sensor telemetry packet for 2oo3 voting
+/// response from shortening a url
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TelemetryPacket {
-    /// unique sensor identifier
-    pub sensor_id: String,
-    /// measured value
-    pub value: f64,
-    /// unix timestamp in milliseconds
-    pub timestamp_ms: u64,
-    /// which edge location processed this
-    pub edge_location: Option<String>,
+pub struct ShortenResponse {
+    pub code: String,
+    pub short_url: String,
+    pub original_url: String,
 }
 
-/// result of 2oo3 tmr voting
+/// stored url entry in kv
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VoteResult {
-    /// consensus value (average of agreeing values)
-    pub consensus: f64,
-    /// values that were rejected as outliers
-    pub rejected: Vec<f64>,
-    /// fault tolerance status
-    pub fault_status: FaultStatus,
-}
-
-/// fault tolerance status after voting
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum FaultStatus {
-    /// all 3 values agreed (within tolerance)
-    AllHealthy,
-    /// 2 of 3 agreed, 1 rejected
-    OneFaulty,
-    /// no consensus possible
-    NoConsensus,
+pub struct UrlEntry {
+    pub original_url: String,
+    pub created_at: u64,
+    pub clicks: u64,
 }
 
 // ==============================================================================
-// capability demo types
+// rate limiter types
+// ==============================================================================
+
+/// rate limit configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RateLimitConfig {
+    /// maximum requests per window
+    pub limit: u32,
+    /// window size in seconds
+    pub window_seconds: u64,
+}
+
+impl Default for RateLimitConfig {
+    fn default() -> Self {
+        Self {
+            limit: 10,
+            window_seconds: 60,
+        }
+    }
+}
+
+/// rate limit status for a client
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RateLimitStatus {
+    pub client_id: String,
+    pub requests_made: u32,
+    pub requests_remaining: u32,
+    pub limit: u32,
+    pub reset_in_seconds: u64,
+}
+
+// ==============================================================================
+// capability demo types (kept from original)
 // ==============================================================================
 
 /// capability test request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityTest {
-    /// which capability to test
     pub capability: CapabilityType,
 }
 
@@ -122,11 +106,8 @@ pub enum CapabilityType {
 /// result of capability test
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityResult {
-    /// which capability was tested
     pub capability: CapabilityType,
-    /// whether it was allowed
     pub allowed: bool,
-    /// result message or error
     pub message: String,
 }
 
@@ -139,24 +120,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_modbus_frame_serialization() {
-        let frame = ModbusFrame {
-            device_id: 1,
-            function_code: 3,
-            data: vec![0x00, 0x0A],
-            crc_valid: true,
+    fn test_shorten_request_serialization() {
+        let req = ShortenRequest {
+            url: "https://example.com".to_string(),
         };
-        let json = serde_json::to_string(&frame).unwrap();
-        assert!(json.contains("\"device_id\":1"));
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(json.contains("example.com"));
     }
 
     #[test]
-    fn test_vote_result_fault_status() {
-        let result = VoteResult {
-            consensus: 23.5,
-            rejected: vec![99.9],
-            fault_status: FaultStatus::OneFaulty,
-        };
-        assert_eq!(result.fault_status, FaultStatus::OneFaulty);
+    fn test_rate_limit_config_default() {
+        let config = RateLimitConfig::default();
+        assert_eq!(config.limit, 10);
+        assert_eq!(config.window_seconds, 60);
     }
 }

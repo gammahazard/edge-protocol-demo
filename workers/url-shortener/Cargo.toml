@@ -1,5 +1,5 @@
 [package]
-name = "protocol-parser"
+name = "url-shortener"
 version.workspace = true
 edition = "2021"
 
@@ -11,6 +11,7 @@ shared = { path = "../../shared" }
 worker = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+rand = "0.8"
 
 [profile.release]
 opt-level = "s"

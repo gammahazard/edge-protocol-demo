@@ -1,0 +1,19 @@
+name = "url-shortener"
+main = "build/worker/shim.mjs"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[vars]
+ENVIRONMENT = "production"
+
+# kv namespace for storing url mappings
+# run: wrangler kv namespace create "URLS"
+# then update the id below
+[[kv_namespaces]]
+binding = "URLS"
+id = "placeholder_create_with_wrangler"
+
+[env.preview]
+name = "url-shortener-preview"

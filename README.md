@@ -4,30 +4,19 @@
 [![Rust](https://img.shields.io/badge/Rust-WASM-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-**Industrial protocol parsing with 2oo3 TMR voting — running on Cloudflare's global edge network.**
+**Production-style Cloudflare Workers demonstrating edge computing patterns.**
 
-> Demonstrates WASM capability-based security using the same patterns as embedded edge gateways, but deployed to 300+ global data centers.
+> URL shortening, rate limiting, and capability-based security — running on Cloudflare's global edge network.
 
 ---
 
-## Architecture
+## Workers
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    PUBLIC DASHBOARD                              │
-│                    (Cloudflare Pages)                            │
-│  • Protocol simulator   • TMR voting demo   • Capability explorer│
-└────────────────────────────────┬────────────────────────────────┘
-                                 │
-        ┌────────────────────────┼────────────────────────┐
-        ▼                        ▼                        ▼
-┌───────────────┐      ┌───────────────┐      ┌───────────────┐
-│ /api/parse    │      │ /api/vote     │      │ /api/capability│
-│ Protocol      │      │ 2oo3 TMR      │      │ Security      │
-│ Parser        │      │ Voter         │      │ Demo          │
-│ (Rust WASM)   │      │ (Rust WASM)   │      │ (Rust WASM)   │
-└───────────────┘      └───────────────┘      └───────────────┘
-```
+| Worker | Purpose | Cloudflare Features |
+|:-------|:--------|:--------------------|
+| **url-shortener** | Shorten and redirect URLs | Workers KV, JSON API |
+| **rate-limiter** | Protect APIs from abuse | Workers KV, Rate limiting headers |
+| **capability-demo** | Show allowed/blocked operations | Security model |
 
 ---
 
@@ -40,10 +29,58 @@ npm install -g wrangler
 # Login to Cloudflare
 wrangler login
 
-# Deploy all workers
-cd workers/protocol-parser && wrangler deploy
-cd ../telemetry-voter && wrangler deploy
-cd ../capability-demo && wrangler deploy
+# Create KV namespaces
+cd workers/url-shortener
+wrangler kv namespace create "URLS"
+# Copy the ID to wrangler.toml
+
+cd ../rate-limiter
+wrangler kv namespace create "RATES"
+# Copy the ID to wrangler.toml
+
+# Deploy
+wrangler deploy
+```
+
+---
+
+## API Examples
+
+### URL Shortener
+
+```bash
+# Shorten a URL
+curl -X POST https://url-shortener.your.workers.dev/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/very/long/path"}'
+
+# Response: {"code": "abc123", "short_url": "https://.../abc123"}
+
+# Use the short URL
+curl -L https://url-shortener.your.workers.dev/abc123
+# Redirects to original URL
+```
+
+### Rate Limiter
+
+```bash
+# Access protected endpoint (10 requests per minute)
+curl https://rate-limiter.your.workers.dev/api/protected
+
+# Check status
+curl https://rate-limiter.your.workers.dev/api/status
+# Response: {"requests_remaining": 8, "reset_in_seconds": 45}
+```
+
+### Capability Demo
+
+```bash
+# Test what Workers can do
+curl "https://capability-demo.your.workers.dev/api/capability?test=fetch"
+# Response: {"allowed": true, "message": "fetch() succeeded"}
+
+curl "https://capability-demo.your.workers.dev/api/capability?test=filesystem"
+# Response: {"allowed": false, "message": "BLOCKED: No filesystem access"}
 ```
 
 ---
@@ -53,22 +90,22 @@ cd ../capability-demo && wrangler deploy
 ```
 edge-protocol-demo/
 ├── workers/
-│   ├── protocol-parser/     # Modbus/OPC-UA frame parsing
-│   ├── telemetry-voter/     # 2oo3 TMR consensus voting
-│   └── capability-demo/     # Shows allowed vs blocked operations
-├── shared/                  # Common types across workers
-├── dashboard/               # Public web UI (Cloudflare Pages)
-└── docs/                    # Architecture documentation
+│   ├── url-shortener/       # KV-backed URL shortening
+│   ├── rate-limiter/        # Edge rate limiting
+│   └── capability-demo/     # Security model demo
+├── shared/                  # Common types
+├── .github/workflows/       # CI/CD
+└── docs/
 ```
 
 ---
 
 ## Related Projects
 
-| Project | Focus | Demo |
-|---------|-------|------|
-| [Guardian-One Web Demo](https://github.com/gammahazard/Guardian-one-web-demo) | Browser-based attack simulation | [Live](https://guardian-one.vercel.app) |
-| [Edge WASI Runtime](https://github.com/gammahazard/edge-wasi-runtime) | Raspberry Pi hardware integration | Video |
+| Project | Focus |
+|:--------|:------|
+| [Guardian-One Web Demo](https://github.com/gammahazard/Guardian-one-web-demo) | WASI capability security visualization |
+| [Edge WASI Runtime](https://github.com/gammahazard/edge-wasi-runtime) | Raspberry Pi + Wasmtime + Python WASM |
 
 ---
 

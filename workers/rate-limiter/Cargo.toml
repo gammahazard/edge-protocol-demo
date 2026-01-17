@@ -1,5 +1,5 @@
 [package]
-name = "telemetry-voter"
+name = "rate-limiter"
 version.workspace = true
 edition = "2021"
 

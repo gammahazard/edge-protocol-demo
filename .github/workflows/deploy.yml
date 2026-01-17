@@ -52,9 +52,9 @@ jobs:
       - name: Install worker-build
         run: cargo install worker-build
 
-      # Deploy protocol-parser worker
-      - name: Deploy protocol-parser
-        working-directory: workers/protocol-parser
+      # Deploy url-shortener worker
+      - name: Deploy url-shortener
+        working-directory: workers/url-shortener
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -64,9 +64,9 @@ jobs:
             wrangler deploy --env preview
           fi
 
-      # Deploy telemetry-voter worker
-      - name: Deploy telemetry-voter
-        working-directory: workers/telemetry-voter
+      # Deploy rate-limiter worker
+      - name: Deploy rate-limiter
+        working-directory: workers/rate-limiter
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |

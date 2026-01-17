@@ -2,8 +2,8 @@
 resolver = "2"
 members = [
     "shared",
-    "workers/protocol-parser",
-    "workers/telemetry-voter", 
+    "workers/url-shortener",
+    "workers/rate-limiter", 
     "workers/capability-demo",
 ]
 

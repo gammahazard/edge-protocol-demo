@@ -1,0 +1,22 @@
+name = "rate-limiter"
+main = "build/worker/shim.mjs"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[vars]
+ENVIRONMENT = "production"
+# rate limit config
+RATE_LIMIT = "10"           # requests per window
+RATE_WINDOW_SECONDS = "60"  # window size in seconds
+
+# kv namespace for rate limiting counters
+# run: wrangler kv namespace create "RATES"
+# then update the id below
+[[kv_namespaces]]
+binding = "RATES"
+id = "placeholder_create_with_wrangler"
+
+[env.preview]
+name = "rate-limiter-preview"
