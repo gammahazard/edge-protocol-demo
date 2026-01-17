@@ -85,13 +85,20 @@ pub struct CapabilityResult {
 pub async fn shorten_url(url: &str) -> Result<ShortenResponse, String> {
     let body = ShortenRequest { url: url.to_string() };
     
-    Request::post(&format!("{}/shorten", URL_SHORTENER_BASE))
+    let response = Request::post(&format!("{}/shorten", URL_SHORTENER_BASE))
         .header("Content-Type", "application/json")
         .body(serde_json::to_string(&body).unwrap())
         .map_err(|e| e.to_string())?
         .send()
         .await
-        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
+    
+    // Check for rate limiting
+    if response.status() == 429 {
+        return Err("Rate limited! Please wait a minute before creating more URLs.".to_string());
+    }
+    
+    response
         .json::<ShortenResponse>()
         .await
         .map_err(|e| e.to_string())
@@ -139,10 +146,17 @@ pub async fn get_rate_status() -> Result<RateLimitStatus, String> {
 
 /// Test a capability
 pub async fn test_capability(capability: &str) -> Result<CapabilityResult, String> {
-    Request::get(&format!("{}/api/capability?test={}", CAPABILITY_DEMO_BASE, capability))
+    let response = Request::get(&format!("{}/api/capability?test={}", CAPABILITY_DEMO_BASE, capability))
         .send()
         .await
-        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
+    
+    // Check for rate limiting
+    if response.status() == 429 {
+        return Err("429 - Rate limited".to_string());
+    }
+    
+    response
         .json::<CapabilityResult>()
         .await
         .map_err(|e| e.to_string())
