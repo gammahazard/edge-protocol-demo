@@ -95,7 +95,7 @@ The dashboard is a **full Leptos WASM application** running on Cloudflare Pages:
 | **Dashboard** | Cloudflare Pages | Push to `main` or `develop` (dashboard/dist changes) |
 | **Workers** | GitHub Actions | Push to `main` or `develop` (workers/** changes only) |
 
-> **Note:** Dashboard changes (`dashboard/**`) are excluded from worker deploys via `paths-ignore` in the workflow. This prevents unnecessary worker rebuilds when only updating the UI. Workers are built locally with `trunk build --release` and committed to `dashboard/dist/`.
+> **Note:** Dashboard changes (`dashboard/**`) are excluded from worker deploys via `paths-ignore` in the workflow. This prevents unnecessary worker rebuilds when only updating the UI. The dashboard is built locally with `trunk build --release` and committed to `dashboard/dist/`.
 
 ---
 
