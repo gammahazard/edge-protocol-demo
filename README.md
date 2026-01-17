@@ -5,7 +5,7 @@
 [![Leptos](https://img.shields.io/badge/Leptos-WASM_UI-6f4e37?style=for-the-badge&logo=webassembly&logoColor=white)](https://leptos.dev/)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-22c55e?style=for-the-badge&logo=cloudflare&logoColor=white)](https://edge-protocol-demo.pages.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Deploy Workers](https://github.com/gammahazard/edge-protocol-demo/actions/workflows/deploy-workers.yml/badge.svg?branch=develop)](https://github.com/gammahazard/edge-protocol-demo/actions/workflows/deploy-workers.yml)
+[![Deploy Workers](https://github.com/gammahazard/edge-protocol-demo/actions/workflows/deploy.yml/badge.svg?branch=develop)](https://github.com/gammahazard/edge-protocol-demo/actions/workflows/deploy.yml)
 
 **Production-style Cloudflare Workers + Leptos WASM dashboard demonstrating real-world edge computing patterns.**
 
