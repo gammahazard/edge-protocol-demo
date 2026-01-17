@@ -267,18 +267,16 @@ async fn get_rate_info(ctx: &RouteContext<()>, client_id: &str) -> Result<RateIn
 
 /// get client identifier from api key header or ip address
 fn get_client_id(req: &Request) -> String {
+    let headers = req.headers();
+    
     // prefer api key if provided
-    if let Ok(headers) = req.headers() {
-        if let Ok(Some(key)) = headers.get("X-API-Key") {
-            return format!("key:{}", key);
-        }
+    if let Ok(Some(key)) = headers.get("X-API-Key") {
+        return format!("key:{}", key);
     }
     
     // fall back to cf-connecting-ip (cloudflare provides this)
-    if let Ok(headers) = req.headers() {
-        if let Ok(Some(ip)) = headers.get("CF-Connecting-IP") {
-            return format!("ip:{}", ip);
-        }
+    if let Ok(Some(ip)) = headers.get("CF-Connecting-IP") {
+        return format!("ip:{}", ip);
     }
     
     // last resort
@@ -287,12 +285,12 @@ fn get_client_id(req: &Request) -> String {
 
 /// get cloudflare edge location from headers
 fn get_edge_location(req: &Request) -> String {
-    if let Ok(headers) = req.headers() {
-        if let Ok(Some(colo)) = headers.get("CF-Ray") {
-            // cf-ray format: "abc123-LAX" where LAX is the datacenter
-            if let Some(pos) = colo.rfind('-') {
-                return colo[pos + 1..].to_string();
-            }
+    let headers = req.headers();
+    
+    if let Ok(Some(colo)) = headers.get("CF-Ray") {
+        // cf-ray format: "abc123-LAX" where LAX is the datacenter
+        if let Some(pos) = colo.rfind('-') {
+            return colo[pos + 1..].to_string();
         }
     }
     "unknown".to_string()
