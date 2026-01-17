@@ -82,7 +82,7 @@ pub fn RateLimiterTab() -> impl IntoView {
                 }
                 Err(e) => {
                     let error_lower = e.to_lowercase();
-                    if error_lower.contains("failed to fetch") || error_lower.contains("network") {
+                    if error_lower.contains("failed to fetch") || error_lower.contains("load failed") || error_lower.contains("network") {
                         set_last_response.set(Some("🌐 Service unavailable - daily request limit may be exceeded. Try again tomorrow!".to_string()));
                     } else {
                         set_last_response.set(Some(format!("❌ {}", e)));
