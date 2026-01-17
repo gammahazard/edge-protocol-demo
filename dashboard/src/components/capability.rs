@@ -14,24 +14,36 @@ pub fn CapabilityTab() -> impl IntoView {
     ]);
     let (selected, set_selected) = signal::<Option<api::CapabilityResult>>(None);
     let (loading, set_loading) = signal::<Option<String>>(None);
+    let (error, set_error) = signal::<Option<String>>(None);
     
     // test a capability
     let test = move |capability: String| {
         set_loading.set(Some(capability.clone()));
+        set_error.set(None);
         
         let cap = capability.clone();
         leptos::task::spawn_local(async move {
-            if let Ok(result) = api::test_capability(&cap).await {
-                set_selected.set(Some(result.clone()));
-                
-                // update results list
-                set_results.update(|list| {
-                    for item in list.iter_mut() {
-                        if item.0 == cap {
-                            item.1 = Some(result.clone());
+            match api::test_capability(&cap).await {
+                Ok(result) => {
+                    set_selected.set(Some(result.clone()));
+                    
+                    // update results list
+                    set_results.update(|list| {
+                        for item in list.iter_mut() {
+                            if item.0 == cap {
+                                item.1 = Some(result.clone());
+                            }
                         }
+                    });
+                }
+                Err(e) => {
+                    // Check if it's a rate limit error
+                    if e.contains("429") || e.to_lowercase().contains("rate") {
+                        set_error.set(Some("⏱️ Rate limited! Please wait a minute and try again.".to_string()));
+                    } else {
+                        set_error.set(Some(format!("Error: {}", e)));
                     }
-                });
+                }
             }
             set_loading.set(None);
         });
@@ -74,6 +86,19 @@ pub fn CapabilityTab() -> impl IntoView {
                     }
                 }).collect::<Vec<_>>()}
             </div>
+            
+            // error display (rate limit, etc)
+            {move || error.get().map(|e| view! {
+                <div class="result error" style="background: rgba(239, 68, 68, 0.1); border-color: var(--error);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.25rem;">"⏱️"</span>
+                        <div>
+                            <div style="font-weight: 600; color: var(--error);">"Rate Limited"</div>
+                            <div style="color: var(--text-secondary); font-size: 0.875rem;">{e}</div>
+                        </div>
+                    </div>
+                </div>
+            })}
             
             // selected result detail
             {move || selected.get().map(|result| view! {
