@@ -89,12 +89,12 @@ async fn handle_shorten(mut req: Request, ctx: RouteContext<()>) -> Result<Respo
     // parse request
     let body: ShortenRequest = match req.json().await {
         Ok(b) => b,
-        Err(_) => return Response::error("invalid json body", 400),
+        Err(_) => return cors_error("invalid json body", 400),
     };
     
     // validate url
     if !body.url.starts_with("http://") && !body.url.starts_with("https://") {
-        return Response::error("url must start with http:// or https://", 400);
+        return cors_error("url must start with http:// or https://", 400);
     }
     
     // generate short code (6 characters)
@@ -103,7 +103,7 @@ async fn handle_shorten(mut req: Request, ctx: RouteContext<()>) -> Result<Respo
     // get kv namespace
     let kv = match ctx.env.kv("URLS") {
         Ok(kv) => kv,
-        Err(_) => return Response::error("kv namespace not configured", 500),
+        Err(_) => return cors_error("kv namespace not configured", 500),
     };
     
     // create entry
@@ -140,19 +140,19 @@ async fn handle_shorten(mut req: Request, ctx: RouteContext<()>) -> Result<Respo
 async fn handle_redirect(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
     let code = match ctx.param("code") {
         Some(c) => c,
-        None => return Response::error("missing code", 400),
+        None => return cors_error("missing code", 400),
     };
     
     // get kv namespace
     let kv = match ctx.env.kv("URLS") {
         Ok(kv) => kv,
-        Err(_) => return Response::error("kv namespace not configured", 500),
+        Err(_) => return cors_error("kv namespace not configured", 500),
     };
     
     // look up the code
     let entry_json = match kv.get(code).text().await? {
         Some(json) => json,
-        None => return Response::error("short url not found", 404),
+        None => return cors_error("short url not found", 404),
     };
     
     // parse entry
@@ -172,19 +172,19 @@ async fn handle_redirect(_req: Request, ctx: RouteContext<()>) -> Result<Respons
 async fn handle_stats(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
     let code = match ctx.param("code") {
         Some(c) => c,
-        None => return Response::error("missing code", 400),
+        None => return cors_error("missing code", 400),
     };
     
     // get kv namespace
     let kv = match ctx.env.kv("URLS") {
         Ok(kv) => kv,
-        Err(_) => return Response::error("kv namespace not configured", 500),
+        Err(_) => return cors_error("kv namespace not configured", 500),
     };
     
     // look up the code
     let entry_json = match kv.get(code).text().await? {
         Some(json) => json,
-        None => return Response::error("short url not found", 404),
+        None => return cors_error("short url not found", 404),
     };
     
     // parse and return
@@ -213,6 +213,19 @@ fn handle_cors(_req: Request, _ctx: RouteContext<()>) -> Result<Response> {
     headers.set("Access-Control-Allow-Headers", "Content-Type")?;
     
     Ok(Response::empty()?.with_headers(headers))
+}
+
+/// helper to create error responses with cors headers
+fn cors_error(msg: &str, status: u16) -> Result<Response> {
+    let headers = Headers::new();
+    headers.set("Access-Control-Allow-Origin", "*")?;
+    headers.set("Content-Type", "application/json")?;
+    
+    let body = serde_json::json!({ "error": msg }).to_string();
+    
+    let mut resp = Response::ok(body)?;
+    resp = resp.with_status(status);
+    Ok(resp.with_headers(headers))
 }
 
 // ==============================================================================

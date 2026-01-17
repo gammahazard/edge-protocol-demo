@@ -132,7 +132,9 @@ async fn handle_protected(req: Request, ctx: RouteContext<()>) -> Result<Respons
         headers.set("Retry-After", &reset_in.to_string())?;
         headers.set("Access-Control-Allow-Origin", "*")?;
         
-        return Ok(Response::error(json, 429)?.with_headers(headers));
+        let mut resp = Response::ok(json)?;
+        resp = resp.with_status(429);
+        return Ok(resp.with_headers(headers));
     }
     
     // allowed - return protected data
