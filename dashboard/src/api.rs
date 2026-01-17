@@ -19,6 +19,7 @@ pub struct ShortenRequest {
     pub url: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ShortenResponse {
     pub code: String,
@@ -26,6 +27,7 @@ pub struct ShortenResponse {
     pub original_url: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct UrlStats {
     pub code: String,
@@ -38,6 +40,7 @@ pub struct UrlStats {
 // Rate Limiter types
 // ==============================================================================
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct RateLimitStatus {
     pub client_id: String,
@@ -47,6 +50,7 @@ pub struct RateLimitStatus {
     pub reset_in_seconds: u64,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ProtectedResponse {
     pub message: String,
@@ -54,6 +58,7 @@ pub struct ProtectedResponse {
     pub edge_location: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct RateLimitedResponse {
     pub error: String,
@@ -93,6 +98,7 @@ pub async fn shorten_url(url: &str) -> Result<ShortenResponse, String> {
 }
 
 /// Get stats for a short URL
+#[allow(dead_code)]
 pub async fn get_url_stats(code: &str) -> Result<UrlStats, String> {
     Request::get(&format!("{}/stats/{}", URL_SHORTENER_BASE, code))
         .send()
