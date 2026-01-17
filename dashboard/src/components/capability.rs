@@ -37,6 +37,9 @@ pub fn CapabilityTab() -> impl IntoView {
                     });
                 }
                 Err(e) => {
+                    // Clear selected result so error shows prominently
+                    set_selected.set(None);
+                    
                     // Check if it's a rate limit error
                     if e.contains("429") || e.to_lowercase().contains("rate") {
                         set_error.set(Some("⏱️ Rate limited! Please wait a minute and try again.".to_string()));
