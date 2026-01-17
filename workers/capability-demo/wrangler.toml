@@ -14,7 +14,7 @@ RATE_WINDOW_SECONDS = "60"
 # shared with rate-limiter worker
 [[kv_namespaces]]
 binding = "RATES"
-id = "d1d97b8ad75341b7b79a41e429b8c30d"
+id = "e3c74a5c223c4feb8ab9e4ea82a55e69"
 
 [env.preview]
 name = "capability-demo-preview"
@@ -26,4 +26,4 @@ RATE_WINDOW_SECONDS = "60"
 
 [[env.preview.kv_namespaces]]
 binding = "RATES"
-id = "d1d97b8ad75341b7b79a41e429b8c30d"
+id = "e3c74a5c223c4feb8ab9e4ea82a55e69"

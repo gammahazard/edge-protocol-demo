@@ -19,7 +19,7 @@ id = "07d4ca3a73da45a3aaf1f5c4a2187893"
 # kv namespace for rate limiting
 [[kv_namespaces]]
 binding = "RATES"
-id = "d1d97b8ad75341b7b79a41e429b8c30d"
+id = "e3c74a5c223c4feb8ab9e4ea82a55e69"
 
 [env.preview]
 name = "url-shortener-preview"
@@ -35,4 +35,4 @@ id = "07d4ca3a73da45a3aaf1f5c4a2187893"
 
 [[env.preview.kv_namespaces]]
 binding = "RATES"
-id = "d1d97b8ad75341b7b79a41e429b8c30d"
+id = "e3c74a5c223c4feb8ab9e4ea82a55e69"
