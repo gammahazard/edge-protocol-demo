@@ -7,3 +7,23 @@ command = "cargo install -q worker-build && worker-build --release"
 
 [vars]
 ENVIRONMENT = "production"
+RATE_LIMIT = "30"
+RATE_WINDOW_SECONDS = "60"
+
+# kv namespace for rate limiting
+# shared with rate-limiter worker
+[[kv_namespaces]]
+binding = "RATES"
+id = "e3c74a5c223c4feb8ab9e4ea82a55e69"
+
+[env.preview]
+name = "capability-demo-preview"
+
+[env.preview.vars]
+ENVIRONMENT = "preview"
+RATE_LIMIT = "30"
+RATE_WINDOW_SECONDS = "60"
+
+[[env.preview.kv_namespaces]]
+binding = "RATES"
+id = "e3c74a5c223c4feb8ab9e4ea82a55e69"

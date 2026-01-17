@@ -1,10 +1,11 @@
-# Edge Protocol Demo
+﻿# Edge Protocol Demo
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Rust](https://img.shields.io/badge/Rust-WASM-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Leptos](https://img.shields.io/badge/Leptos-WASM_UI-6f4e37?style=for-the-badge&logo=webassembly&logoColor=white)](https://leptos.dev/)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-22c55e?style=for-the-badge&logo=cloudflare&logoColor=white)](https://edge-protocol-demo.pages.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Deploy Workers](https://github.com/gammahazard/edge-protocol-demo/actions/workflows/deploy.yml/badge.svg?branch=develop)](https://github.com/gammahazard/edge-protocol-demo/actions/workflows/deploy.yml)
 
 **Production-style Cloudflare Workers + Leptos WASM dashboard demonstrating real-world edge computing patterns.**
 
@@ -23,7 +24,8 @@ A full-featured URL shortener using **Workers KV** for persistent storage at the
 - **Create short URLs** via REST API
 - **Click tracking** with automatic counter increment
 - **Statistics endpoint** for analytics
-- **301 redirects** handled at edge (< 50ms globally)
+- **301 redirects** handled at edge (<50ms globally)
+- **Rate limited**  20 creates/min per IP to prevent abuse
 
 **Why it matters:** KV is the backbone of many Cloudflare applications. This demonstrates the read-heavy, eventually-consistent patterns that scale to millions of requests.
 
@@ -54,6 +56,11 @@ Demonstrates **what Workers can and cannot do** — the same capability-based se
 | `Filesystem` | ❌ Blocked | Workers have no fs access |
 | `Raw Sockets` | ❌ Blocked | Only fetch(), no TCP/UDP |
 | `Subprocess` | ❌ Blocked | No exec, no shell |
+
+**Features:**
+- Test each capability interactively via the dashboard
+- See real error messages when blocked capabilities are attempted
+- **Rate limited** — 30 tests/min per IP
 
 **Why it matters:** This is the same security model as WASI — code only gets capabilities the runtime explicitly grants. Demonstrates understanding of sandboxed execution.
 
