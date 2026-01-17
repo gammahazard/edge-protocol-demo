@@ -5,6 +5,13 @@ members = [
     "workers/url-shortener",
     "workers/rate-limiter", 
     "workers/capability-demo",
+    "dashboard",
+]
+default-members = [
+    "shared",
+    "workers/url-shortener",
+    "workers/rate-limiter", 
+    "workers/capability-demo",
 ]
 
 [workspace.package]
