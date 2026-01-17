@@ -129,7 +129,7 @@ async fn handle_shorten(mut req: Request, ctx: RouteContext<()>) -> Result<Respo
     
     // return json with cors
     let json = serde_json::to_string(&response).unwrap();
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
     
@@ -198,7 +198,7 @@ async fn handle_stats(_req: Request, ctx: RouteContext<()>) -> Result<Response> 
         "clicks": entry.clicks,
     });
     
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
     
@@ -207,7 +207,7 @@ async fn handle_stats(_req: Request, ctx: RouteContext<()>) -> Result<Response> 
 
 /// handle cors preflight
 fn handle_cors(_req: Request, _ctx: RouteContext<()>) -> Result<Response> {
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Access-Control-Allow-Origin", "*")?;
     headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")?;
     headers.set("Access-Control-Allow-Headers", "Content-Type")?;

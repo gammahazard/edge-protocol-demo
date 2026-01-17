@@ -124,7 +124,7 @@ async fn handle_protected(req: Request, ctx: RouteContext<()>) -> Result<Respons
         };
         
         let json = serde_json::to_string(&response).unwrap();
-        let mut headers = Headers::new();
+        let headers = Headers::new();
         headers.set("Content-Type", "application/json")?;
         headers.set("X-RateLimit-Limit", &limit.to_string())?;
         headers.set("X-RateLimit-Remaining", "0")?;
@@ -143,7 +143,7 @@ async fn handle_protected(req: Request, ctx: RouteContext<()>) -> Result<Respons
     };
     
     let json = serde_json::to_string(&response).unwrap();
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("X-RateLimit-Limit", &limit.to_string())?;
     headers.set("X-RateLimit-Remaining", &remaining.to_string())?;
@@ -178,7 +178,7 @@ async fn handle_status(req: Request, ctx: RouteContext<()>) -> Result<Response> 
     };
     
     let json = serde_json::to_string(&response).unwrap();
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
     
@@ -186,7 +186,7 @@ async fn handle_status(req: Request, ctx: RouteContext<()>) -> Result<Response> 
 }
 
 fn handle_cors(_req: Request, _ctx: RouteContext<()>) -> Result<Response> {
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Access-Control-Allow-Origin", "*")?;
     headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
     headers.set("Access-Control-Allow-Headers", "Content-Type, X-API-Key")?;

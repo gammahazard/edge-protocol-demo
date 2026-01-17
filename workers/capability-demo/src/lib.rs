@@ -43,7 +43,7 @@ use worker::*;
 // ==============================================================================
 
 #[event(fetch)]
-async fn fetch(req: Request, env: Env, ctx: Context) -> Result<Response> {
+async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let router = Router::new();
     
     router
@@ -83,7 +83,7 @@ async fn handle_capability(req: Request, ctx: RouteContext<()>) -> Result<Respon
     
     // return json response
     let json = serde_json::to_string(&result).unwrap();
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
     
@@ -101,7 +101,7 @@ fn handle_list_capabilities(_req: Request, _ctx: RouteContext<()>) -> Result<Res
     ];
     
     let json = serde_json::to_string(&capabilities).unwrap();
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
     
@@ -110,7 +110,7 @@ fn handle_list_capabilities(_req: Request, _ctx: RouteContext<()>) -> Result<Res
 
 /// handle cors preflight
 fn handle_cors(_req: Request, _ctx: RouteContext<()>) -> Result<Response> {
-    let mut headers = Headers::new();
+    let headers = Headers::new();
     headers.set("Access-Control-Allow-Origin", "*")?;
     headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
     headers.set("Access-Control-Allow-Headers", "Content-Type")?;
