@@ -222,6 +222,7 @@ async fn handle_stats(_req: Request, ctx: RouteContext<()>) -> Result<Response> 
     let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
+    headers.set("Cache-Control", "public, max-age=5")?; // Cache for 5 seconds
     
     Ok(Response::ok(response.to_string())?.with_headers(headers))
 }
