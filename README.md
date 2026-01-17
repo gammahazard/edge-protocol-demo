@@ -2,12 +2,13 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Rust](https://img.shields.io/badge/Rust-WASM-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-22c55e?style=for-the-badge&logo=cloudflare&logoColor=white)](https://develop.edge-protocol-demo.pages.dev/)
+[![Leptos](https://img.shields.io/badge/Leptos-WASM_UI-6f4e37?style=for-the-badge&logo=webassembly&logoColor=white)](https://leptos.dev/)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-22c55e?style=for-the-badge&logo=cloudflare&logoColor=white)](https://edge-protocol-demo.pages.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 **Production-style Cloudflare Workers + Leptos WASM dashboard demonstrating real-world edge computing patterns.**
 
-**🚀 [Try the Live Demo →](https://develop.edge-protocol-demo.pages.dev/)**
+**🚀 [Try the Live Demo →](https://edge-protocol-demo.pages.dev/)**
 
 ---
 
@@ -36,6 +37,8 @@ A sliding-window rate limiter protecting APIs from abuse — **before requests r
 - **Per-client tracking** via IP or API key
 - **Standard headers** (`X-RateLimit-Remaining`, `Retry-After`)
 - **TTL-based cleanup** — no manual expiration needed
+- **Live countdown timer** in dashboard (client-side, instant reset)
+- **Edge location display** (shows which Cloudflare POP handled your request)
 
 **Why it matters:** Rate limiting at the edge is Cloudflare's core value proposition. Malicious traffic is blocked in 300+ locations, never reaching your servers.
 
@@ -56,14 +59,25 @@ Demonstrates **what Workers can and cannot do** — the same capability-based se
 
 ---
 
+## Interactive Dashboard
+
+The dashboard is a **full Leptos WASM application** running on Cloudflare Pages:
+
+- **URL Shortener Tab** — Create URLs, view history table with click stats
+- **Rate Limiter Tab** — Test rate limiting with live countdown timer
+- **Capabilities Tab** — Explore Workers' security model interactively
+- **Mobile Responsive** — Card-based layout adapts to any screen size
+- **localStorage Persistence** — Your shortened URLs survive browser refreshes
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
 |:------|:-----------|
-| **Language** | Rust |
-| **Compile Target** | `wasm32-unknown-unknown` |
-| **Runtime** | Cloudflare Workers (V8 + Workers Runtime) |
-| **Storage** | Workers KV |
+| **Workers** | Rust → `wasm32-unknown-unknown` → Cloudflare Workers |
+| **Dashboard** | Leptos 0.7 + Trunk → Cloudflare Pages |
+| **Storage** | Workers KV (edge), localStorage (client) |
 | **CI/CD** | GitHub Actions → Wrangler deploy |
 | **Branching** | Git Flow (`main` → production, `develop` → preview) |
 

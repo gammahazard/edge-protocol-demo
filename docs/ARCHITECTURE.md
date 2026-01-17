@@ -81,13 +81,13 @@ edge-protocol-demo/
 ## Request Flow
 
 ```
-1. User visits https://develop.edge-protocol-demo.pages.dev
+1. User visits https://edge-protocol-demo.pages.dev
 2. Leptos WASM app loads in browser
 3. User interacts (e.g., shortens a URL)
 4. Dashboard calls Worker API via fetch()
 5. Worker executes Rust WASM on nearest edge node
 6. Response returns with data + CORS headers
-7. Dashboard updates UI
+7. Dashboard updates UI + persists to localStorage
 ```
 
 ## Deployment
