@@ -135,6 +135,7 @@ fn handle_list_capabilities(_req: Request, _ctx: RouteContext<()>) -> Result<Res
     let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
+    headers.set("Cache-Control", "public, max-age=60")?; // Cache for 60 seconds (static data)
     
     Ok(Response::ok(json)?.with_headers(headers))
 }

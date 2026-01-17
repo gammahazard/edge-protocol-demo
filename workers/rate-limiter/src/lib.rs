@@ -183,6 +183,7 @@ async fn handle_status(req: Request, ctx: RouteContext<()>) -> Result<Response> 
     let headers = Headers::new();
     headers.set("Content-Type", "application/json")?;
     headers.set("Access-Control-Allow-Origin", "*")?;
+    headers.set("Cache-Control", "public, max-age=2")?; // Cache for 2 seconds
     
     Ok(Response::ok(json)?.with_headers(headers))
 }
