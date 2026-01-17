@@ -16,3 +16,10 @@ id = "07d4ca3a73da45a3aaf1f5c4a2187893"
 
 [env.preview]
 name = "url-shortener-preview"
+
+[env.preview.vars]
+ENVIRONMENT = "preview"
+
+[[env.preview.kv_namespaces]]
+binding = "URLS"
+id = "07d4ca3a73da45a3aaf1f5c4a2187893"
