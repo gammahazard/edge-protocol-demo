@@ -15,20 +15,8 @@ pub fn RateLimiterTab() -> impl IntoView {
     // track if user has an active rate limit window
     let (has_active_window, set_has_active_window) = signal(false);
     
-    // fetch status on mount
-    Effect::new(move || {
-        leptos::task::spawn_local(async move {
-            if let Ok(s) = api::get_rate_status().await {
-                if s.requests_remaining < s.limit {
-                    set_countdown.set(s.reset_in_seconds);
-                    set_has_active_window.set(true);
-                } else {
-                    set_has_active_window.set(false);
-                }
-                set_status.set(Some(s));
-            }
-        });
-    });
+    // Note: We don't fetch status on mount to save API requests.
+    // Status will populate on first "Send Request" click.
     
     // live countdown timer - uses try_get to safely handle disposed signals
     Effect::new(move || {
