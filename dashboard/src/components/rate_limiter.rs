@@ -89,7 +89,7 @@ pub fn RateLimiterTab() -> impl IntoView {
         leptos::task::spawn_local(async move {
             match api::test_rate_limit().await {
                 Ok(resp) => {
-                    set_last_response.set(Some(format!("✅ {} (from {})", resp.message, resp.edge_location)));
+                    set_last_response.set(Some(format!("✅ {}", resp.message)));
                     set_rate_limited.set(false);
                 }
                 Err(e) => {
