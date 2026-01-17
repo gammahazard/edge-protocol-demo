@@ -55,6 +55,11 @@ Demonstrates **what Workers can and cannot do** — the same capability-based se
 | `Raw Sockets` | ❌ Blocked | Only fetch(), no TCP/UDP |
 | `Subprocess` | ❌ Blocked | No exec, no shell |
 
+**Features:**
+- Test each capability interactively via the dashboard
+- See real error messages when blocked capabilities are attempted
+- **Rate limited** — 30 tests/min per IP
+
 **Why it matters:** This is the same security model as WASI — code only gets capabilities the runtime explicitly grants. Demonstrates understanding of sandboxed execution.
 
 ---
