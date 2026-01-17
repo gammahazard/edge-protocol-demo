@@ -9,11 +9,10 @@ command = "cargo install -q worker-build && worker-build --release"
 ENVIRONMENT = "production"
 
 # kv namespace for storing url mappings
-# run: wrangler kv namespace create "URLS"
-# then update the id below
+# created with: wrangler kv namespace create "URLS"
 [[kv_namespaces]]
 binding = "URLS"
-id = "placeholder_create_with_wrangler"
+id = "07d4ca3a73da45a3aaf1f5c4a2187893"
 
 [env.preview]
 name = "url-shortener-preview"

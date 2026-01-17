@@ -12,11 +12,10 @@ RATE_LIMIT = "10"           # requests per window
 RATE_WINDOW_SECONDS = "60"  # window size in seconds
 
 # kv namespace for rate limiting counters
-# run: wrangler kv namespace create "RATES"
-# then update the id below
+# created with: wrangler kv namespace create "RATES"
 [[kv_namespaces]]
 binding = "RATES"
-id = "placeholder_create_with_wrangler"
+id = "e3c74a5c223c4feb8ab9e4ea82a55e69"
 
 [env.preview]
 name = "rate-limiter-preview"
