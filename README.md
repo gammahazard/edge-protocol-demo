@@ -2,9 +2,12 @@
 
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Rust](https://img.shields.io/badge/Rust-WASM-000000?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-22c55e?style=for-the-badge&logo=cloudflare&logoColor=white)](https://develop.edge-protocol-demo.pages.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-**Production-style Cloudflare Workers demonstrating real-world edge computing patterns.**
+**Production-style Cloudflare Workers + Leptos WASM dashboard demonstrating real-world edge computing patterns.**
+
+**🚀 [Try the Live Demo →](https://develop.edge-protocol-demo.pages.dev/)**
 
 ---
 
@@ -134,6 +137,10 @@ curl "https://capability-demo.your.workers.dev/api/capability?test=filesystem"
 
 ```
 edge-protocol-demo/
+├── dashboard/              # Leptos WASM web UI (Cloudflare Pages)
+│   ├── src/                # Rust components
+│   └── dist/               # Built WASM output
+│
 ├── workers/
 │   ├── url-shortener/      # KV-backed URL shortening
 │   │   ├── src/lib.rs      # Worker logic + documentation
