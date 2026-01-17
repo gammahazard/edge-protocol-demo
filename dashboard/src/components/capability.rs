@@ -44,7 +44,7 @@ pub fn CapabilityTab() -> impl IntoView {
                     let error_lower = e.to_lowercase();
                     if e.contains("429") || error_lower.contains("rate") {
                         set_error.set(Some("⏱️ Rate limited! Please wait a minute and try again.".to_string()));
-                    } else if error_lower.contains("failed to fetch") || error_lower.contains("network") {
+                    } else if error_lower.contains("failed to fetch") || error_lower.contains("load failed") || error_lower.contains("network") {
                         set_error.set(Some("🌐 Service temporarily unavailable. The demo may have exceeded its daily request limit. Please try again tomorrow!".to_string()));
                     } else {
                         set_error.set(Some(format!("Error: {}", e)));
