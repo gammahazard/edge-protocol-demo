@@ -85,13 +85,20 @@ pub struct CapabilityResult {
 pub async fn shorten_url(url: &str) -> Result<ShortenResponse, String> {
     let body = ShortenRequest { url: url.to_string() };
     
-    Request::post(&format!("{}/shorten", URL_SHORTENER_BASE))
+    let response = Request::post(&format!("{}/shorten", URL_SHORTENER_BASE))
         .header("Content-Type", "application/json")
         .body(serde_json::to_string(&body).unwrap())
         .map_err(|e| e.to_string())?
         .send()
         .await
-        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
+    
+    // Check for rate limiting
+    if response.status() == 429 {
+        return Err("Rate limited! Please wait a minute before creating more URLs.".to_string());
+    }
+    
+    response
         .json::<ShortenResponse>()
         .await
         .map_err(|e| e.to_string())
