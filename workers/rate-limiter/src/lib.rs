@@ -307,6 +307,10 @@ fn get_edge_location(req: &Request) -> String {
 mod tests {
     use super::*;
 
+    // ===========================================================================
+    // RateInfo serialization tests
+    // ===========================================================================
+    
     #[test]
     fn test_rate_info_serialization() {
         let info = RateInfo {
@@ -316,5 +320,97 @@ mod tests {
         let json = serde_json::to_string(&info).unwrap();
         let parsed: RateInfo = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.count, 5);
+        assert_eq!(parsed.window_start, 1234567890);
+    }
+    
+    #[test]
+    fn test_rate_info_zero_count() {
+        let info = RateInfo {
+            count: 0,
+            window_start: 0,
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        assert!(json.contains("\"count\":0"));
+    }
+    
+    #[test]
+    fn test_rate_info_max_count() {
+        let info = RateInfo {
+            count: u32::MAX,
+            window_start: u64::MAX,
+        };
+        let json = serde_json::to_string(&info).unwrap();
+        let parsed: RateInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.count, u32::MAX);
+        assert_eq!(parsed.window_start, u64::MAX);
+    }
+    
+    // ===========================================================================
+    // Response type tests
+    // ===========================================================================
+    
+    #[test]
+    fn test_protected_response_serialization() {
+        let resp = ProtectedResponse {
+            message: "test".to_string(),
+            timestamp: 1234567890,
+            edge_location: "LAX".to_string(),
+        };
+        let json = serde_json::to_string(&resp).unwrap();
+        assert!(json.contains("\"message\":\"test\""));
+        assert!(json.contains("\"edge_location\":\"LAX\""));
+    }
+    
+    #[test]
+    fn test_status_response_serialization() {
+        let resp = StatusResponse {
+            client_id: "ip:1.2...".to_string(),
+            requests_made: 5,
+            requests_remaining: 5,
+            limit: 10,
+            reset_in_seconds: 30,
+        };
+        let json = serde_json::to_string(&resp).unwrap();
+        assert!(json.contains("\"requests_remaining\":5"));
+        assert!(json.contains("\"limit\":10"));
+    }
+    
+    #[test]
+    fn test_rate_limited_response_serialization() {
+        let resp = RateLimitedResponse {
+            error: "rate limited".to_string(),
+            retry_after_seconds: 45,
+            limit: 10,
+        };
+        let json = serde_json::to_string(&resp).unwrap();
+        assert!(json.contains("\"retry_after_seconds\":45"));
+    }
+    
+    // ===========================================================================
+    // Edge location parsing tests
+    // ===========================================================================
+    
+    #[test]
+    fn test_cf_ray_format() {
+        // Test the CF-Ray format parsing logic directly
+        let cf_ray = "abc123def456-LAX";
+        if let Some(pos) = cf_ray.rfind('-') {
+            let location = &cf_ray[pos + 1..];
+            assert_eq!(location, "LAX");
+        }
+    }
+    
+    #[test]
+    fn test_cf_ray_different_locations() {
+        let test_cases = vec![
+            ("abc-SJC", "SJC"),
+            ("1234-ORD", "ORD"),
+            ("test-value-DFW", "DFW"),
+        ];
+        for (ray, expected) in test_cases {
+            if let Some(pos) = ray.rfind('-') {
+                assert_eq!(&ray[pos + 1..], expected);
+            }
+        }
     }
 }
