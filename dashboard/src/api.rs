@@ -139,10 +139,17 @@ pub async fn get_rate_status() -> Result<RateLimitStatus, String> {
 
 /// Test a capability
 pub async fn test_capability(capability: &str) -> Result<CapabilityResult, String> {
-    Request::get(&format!("{}/api/capability?test={}", CAPABILITY_DEMO_BASE, capability))
+    let response = Request::get(&format!("{}/api/capability?test={}", CAPABILITY_DEMO_BASE, capability))
         .send()
         .await
-        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
+    
+    // Check for rate limiting
+    if response.status() == 429 {
+        return Err("429 - Rate limited".to_string());
+    }
+    
+    response
         .json::<CapabilityResult>()
         .await
         .map_err(|e| e.to_string())
